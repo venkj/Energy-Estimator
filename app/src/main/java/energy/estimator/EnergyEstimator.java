@@ -1,6 +1,7 @@
 package energy.estimator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,6 +20,12 @@ public class EnergyEstimator {
     }
 
     public void addMessage(String input) {
+         // Skip duplicate message
+        if (processedMessages.contains(input)) {
+            return;
+        }
+        processedMessages.add(input);
+        
         String[] parts = input.split(" ");
         if (parts.length < 2) {
             throw new IllegalArgumentException("Invalid message format");
@@ -27,12 +34,10 @@ public class EnergyEstimator {
         long timestamp = ValidationUtils.parseTimestamp(parts[0]);
         MessageType type = ValidationUtils.parseMessageType(parts[1]);
 
-        if (processedMessages.contains(input)) {
-            return; // Skip duplicate message
-        }
-        processedMessages.add(input);
+        String[] messageDetails = Arrays.copyOfRange(parts, 2, parts.length);
+        Message message = MessageFactory.createMessage(timestamp, type, messageDetails);
 
-        // TODO: Create message object and add to messageMap
+        messageMap.computeIfAbsent(timestamp, k -> new ArrayList<>()).add(message);
     }
 
     public List<UsageMessage> getUsageMessages() {
