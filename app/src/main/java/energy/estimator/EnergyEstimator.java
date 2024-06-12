@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -20,12 +21,12 @@ public class EnergyEstimator {
     }
 
     public void addMessage(String input) {
-         // Skip duplicate message
+        // Skip duplicate message
         if (processedMessages.contains(input)) {
             return;
         }
         processedMessages.add(input);
-        
+
         String[] parts = input.split(" ");
         if (parts.length < 2) {
             throw new IllegalArgumentException("Invalid message format");
@@ -53,8 +54,25 @@ public class EnergyEstimator {
     }
 
     public double estimateEnergyUsage(long startTimestamp, long endTimestamp) {
-        // TODO: Process messages to calculate energy estimate
-        return 0.0;
+        double totalEnergy = 0.0;
+        double currentBrightness = getStartingBrightness(startTimestamp);
+        long previousTimestamp = startTimestamp;
+
+        for (Map.Entry<Long, List<Message>> entry : messageMap.subMap(startTimestamp, endTimestamp + 1).entrySet()) {
+            long currentTimestamp = entry.getKey();
+            double timeInterval = (currentTimestamp - previousTimestamp) / 3600.0; // convert seconds to hours
+            totalEnergy += currentBrightness * MAX_POWER_WATTS * timeInterval;
+            previousTimestamp = currentTimestamp;
+
+            currentBrightness = calculateBrightness(entry.getValue(), currentBrightness);
+        }
+
+        // Ensure we handle the end timestamp correctly
+        if (previousTimestamp < endTimestamp) {
+            double finalTimeInterval = (endTimestamp - previousTimestamp) / 3600.0;
+            totalEnergy += currentBrightness * MAX_POWER_WATTS * finalTimeInterval;
+        }
+        return totalEnergy;
     }
 
     public void printEstimatedEnergyUsage(long startTimestamp, long endTimestamp) {
@@ -64,5 +82,30 @@ public class EnergyEstimator {
 
     public SortedMap<Long, List<Message>> getMessageMap() {
         return messageMap;
+    }
+
+    //Ensure the initial brightness calculated based on messages prior to the startTimestamp
+    public double getStartingBrightness(long startTimestamp) {
+        double brightness = 0.0;
+        for (Map.Entry<Long, List<Message>> entry : messageMap.headMap(startTimestamp).entrySet()) {
+            brightness = calculateBrightness(entry.getValue(), brightness);
+        }
+        return brightness;
+    }
+
+    private double calculateBrightness(List<Message> messages, double brightness) {
+        for (Message message : messages) {
+            if (message instanceof DeltaMessage) {
+                brightness = normalizeBrightness(brightness + ((DeltaMessage) message).getDelta());
+            } else if (message instanceof TurnOffMessage) {
+                brightness = 0.0;
+            }
+        }
+        return brightness;
+    }
+
+    // Ensures that the brightness value stays within the valid range of 0.0 to 1.0
+    private double normalizeBrightness(double brightness) {
+        return Math.max(0.0, Math.min(1.0, brightness));
     }
 }
