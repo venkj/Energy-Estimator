@@ -84,7 +84,7 @@ public class EnergyEstimator {
         return messageMap;
     }
 
-    //Ensure the initial brightness calculated based on messages prior to the startTimestamp
+    // Calculate initial brightness based on DeltaMessage and TurnOffMessage messages prior to the startTimestamp
     public double getStartingBrightness(long startTimestamp) {
         double brightness = 0.0;
         for (Map.Entry<Long, List<Message>> entry : messageMap.headMap(startTimestamp).entrySet()) {
