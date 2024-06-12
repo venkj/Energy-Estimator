@@ -16,8 +16,9 @@ public class EnergyEstimatorDemo {
             estimator.addMessage(input);
         }
 
-        // Print energy usage Usage messages
+        // Print energy usage for Usage messages
         for (UsageMessage usageMessage : estimator.getUsageMessages()) {
+            System.out.printf("Energy usage from %d to %d: ", usageMessage.getStartTimestamp(), usageMessage.getEndTimestamp());
             estimator.printEstimatedEnergyUsage(usageMessage.getStartTimestamp(), usageMessage.getEndTimestamp());
         }
 
