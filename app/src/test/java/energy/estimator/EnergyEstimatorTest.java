@@ -49,7 +49,7 @@ class EnergyEstimatorTest {
         double energyUsage = estimator.estimateEnergyUsage(1544206562L, 1544210163L); // 0.5
 
         // THEN
-        assertEquals(2.5, energyUsage, 0.001);
+        assertEquals(expectedEnergy, energyUsage, 0.001);
     }
 
     @Test
